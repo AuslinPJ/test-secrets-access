@@ -1,0 +1,36 @@
+name: User-based Secret Access
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if user is allowed
+        id: check-access
+        run: |
+          # Check if current user is in the allowed list
+          if [[ ",${{ secrets.ALLOWED_USERS }}," == *",${{ github.actor }},"* ]]; then
+            echo "access_granted=true" >> $GITHUB_OUTPUT
+          else
+            echo "access_granted=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Use secret for allowed users
+        if: steps.check-access.outputs.access_granted == 'true'
+        run: |
+          echo "✅ User ${{ github.actor }} has secret access"
+          # Use the secret without exposing its value
+          echo "Secret is set: ${{ secrets.MY_SECRET != '' }}"
+          # Example of using the secret in a safe way
+          echo "Running secure operation with secret..."
+        
+      - name: Regular test for others
+        if: steps.check-access.outputs.access_granted == 'false'
+        run: |
+          echo "⚠️  User ${{ github.actor }} has no secret access"
+          echo "Running without secrets - standard CI tests"
