@@ -12,7 +12,6 @@ jobs:
       - name: Verify user against allowlist
         id: verify
         run: |
-          # Static allowlist - no secrets needed
           ALLOWED_USERS="auslin-aot,trusted-user-2,trusted-user-3"
           if [[ ",$ALLOWED_USERS," == *",${{ github.actor }},"* ]]; then
             echo "user-allowed=true" >> $GITHUB_OUTPUT
@@ -20,16 +19,3 @@ jobs:
             echo "user-allowed=false" >> $GITHUB_OUTPUT
           fi
 
-  secure-test:
-    needs: verify-user
-    if: needs.verify-user.outputs.user-allowed == 'true'
-    runs-on: ubuntu-latest
-    environment: trusted-prs  # Requires manual approval
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Use secrets safely
-        run: |
-          echo "Secret access granted after manual approval"
-          echo "Secret available: ${{ secrets.MY_SECRET != '' }}"
