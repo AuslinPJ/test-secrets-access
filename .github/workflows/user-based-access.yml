@@ -12,7 +12,7 @@ jobs:
       - name: Check if user is trusted
         id: check-user
         run: |
-          TRUSTED_USERS='["trusted-user1", "trusted-user2", "trusted-user3"]'
+          TRUSTED_USERS='["auslin-aot", "trusted-user2", "trusted-user3"]'
           if echo "$TRUSTED_USERS" | jq -e --arg user "${{ github.actor }}" 'index($user) != null' > /dev/null; then
             echo "is-trusted=true" >> $GITHUB_OUTPUT
           else
