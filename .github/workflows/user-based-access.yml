@@ -9,6 +9,5 @@ jobs:
     steps:
       - name: Check PR from fork
         run: |
-          echo "PR from actor: ${{ github.actor }}"
           echo "This workflow runs in fork context - NO SECRET ACCESS"
           echo "But it completes successfully to trigger the next workflow"
