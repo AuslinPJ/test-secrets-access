@@ -9,7 +9,15 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Use secrets
+      - name: Use secrets safely
         run: |
-          echo "Accessing secrets safely"
-          echo "Secret: ${{ secrets.MY_SECRET != '' }}"
+          echo "✅ THIS WORKFLOW CAN ACCESS SECRETS!"
+          echo "Secret available: ${{ secrets.MY_SECRET != '' }}"
+          echo "Secret value length: ${#SECRET_VALUE}"
+          SECRET_VALUE="${{ secrets.MY_SECRET }}"
+          
+      - name: Checkout code if needed
+        uses: actions/checkout@v4
+        with:
+          # You can access the PR SHA from the triggering workflow
+          ref: ${{ github.event.workflow_run.head_sha }}
