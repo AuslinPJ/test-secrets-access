@@ -1,32 +1,35 @@
-name: Conditional Secret Access
+name: Secure Secret Access
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  check-user:
+  verify-user:
     runs-on: ubuntu-latest
     outputs:
-      is-trusted: ${{ steps.check-user.outputs.is-trusted }}
+      user-allowed: ${{ steps.verify.outputs.user-allowed }}
     steps:
-      - name: Check if user is trusted
-        id: check-user
+      - name: Verify user against allowlist
+        id: verify
         run: |
-          TRUSTED_USERS='["auslin-aot", "trusted-user2", "trusted-user3"]'
-          if echo "$TRUSTED_USERS" | jq -e --arg user "${{ github.actor }}" 'index($user) != null' > /dev/null; then
-            echo "is-trusted=true" >> $GITHUB_OUTPUT
+          # Static allowlist - no secrets needed
+          ALLOWED_USERS="auslin-aot,trusted-user-2,trusted-user-3"
+          if [[ ",$ALLOWED_USERS," == *",${{ github.actor }},"* ]]; then
+            echo "user-allowed=true" >> $GITHUB_OUTPUT
           else
-            echo "is-trusted=false" >> $GITHUB_OUTPUT
+            echo "user-allowed=false" >> $GITHUB_OUTPUT
           fi
 
-  test-with-secrets:
-    needs: check-user
-    if: needs.check-user.outputs.is-trusted == 'true'
+  secure-test:
+    needs: verify-user
+    if: needs.verify-user.outputs.user-allowed == 'true'
     runs-on: ubuntu-latest
+    environment: trusted-prs  # Requires manual approval
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Use secret
+      - name: Use secrets safely
         run: |
-          echo "Secret: ${{ secrets.MY_SECRET }}"
+          echo "Secret access granted after manual approval"
+          echo "Secret available: ${{ secrets.MY_SECRET != '' }}"
