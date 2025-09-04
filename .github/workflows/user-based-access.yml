@@ -6,16 +6,9 @@ on:
 jobs:
   verify-user:
     runs-on: ubuntu-latest
-    outputs:
-      user-allowed: ${{ steps.verify.outputs.user-allowed }}
     steps:
-      - name: Verify user against allowlist
-        id: verify
+      - name: Check PR from fork
         run: |
-          ALLOWED_USERS="auslin-aot,trusted-user-2,trusted-user-3"
-          if [[ ",$ALLOWED_USERS," == *",${{ github.actor }},"* ]]; then
-            echo "user-allowed=true" >> $GITHUB_OUTPUT
-          else
-            echo "user-allowed=false" >> $GITHUB_OUTPUT
-          fi
-
+          echo "PR from actor: ${{ github.actor }}"
+          echo "This workflow runs in fork context - NO SECRET ACCESS"
+          echo "But it completes successfully to trigger the next workflow"
