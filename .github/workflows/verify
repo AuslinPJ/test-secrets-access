@@ -1,0 +1,15 @@
+name: Secret Processor
+on:
+  workflow_run:
+    workflows: ["Secure Secret Access"]
+    types: [completed]
+
+jobs:
+  process:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use secrets
+        run: |
+          echo "Accessing secrets safely"
+          echo "Secret: ${{ secrets.MY_SECRET != '' }}"
