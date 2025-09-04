@@ -1,34 +1,32 @@
-name: User-based Secret Access
+name: Conditional Secret Access
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  test:
+  check-user:
     runs-on: ubuntu-latest
+    outputs:
+      is-trusted: ${{ steps.check-user.outputs.is-trusted }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check if user is allowed (using secret)
-        id: check-access
+      - name: Check if user is trusted
+        id: check-user
         run: |
-          # Check if current user is in the allowed list from SECRET
-          if [[ ",${{ secrets.ALLOWED_USERS }}," == *",${{ github.actor }},"* ]]; then
-            echo "access_granted=true" >> $GITHUB_OUTPUT
+          TRUSTED_USERS='["trusted-user1", "trusted-user2", "trusted-user3"]'
+          if echo "$TRUSTED_USERS" | jq -e --arg user "${{ github.actor }}" 'index($user) != null' > /dev/null; then
+            echo "is-trusted=true" >> $GITHUB_OUTPUT
           else
-            echo "access_granted=false" >> $GITHUB_OUTPUT
+            echo "is-trusted=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Use secret for allowed users
-        if: steps.check-access.outputs.access_granted == 'true'
+  test-with-secrets:
+    needs: check-user
+    if: needs.check-user.outputs.is-trusted == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Use secret
         run: |
-          echo "✅ User ${{ github.actor }} has secret access"
-          echo "Secret is set: ${{ secrets.MY_SECRET != '' }}"
-          echo "Running secure operation with secret..."
-        
-      - name: Regular test for others
-        if: steps.check-access.outputs.access_granted == 'false'
-        run: |
-          echo "⚠️  User ${{ github.actor }} has no secret access"
-          echo "Running without secrets"
+          echo "Secret: ${{ secrets.MY_SECRET }}"
